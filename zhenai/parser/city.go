@@ -14,7 +14,6 @@ func ParseCity(contents []byte) engine.ParseResult {
 	urlAndNameMatches := userUrlAndNameRe.FindAllSubmatch(contents, -1)
 
 	result := engine.ParseResult{}
-	limit := 5
 
 	for _, v := range urlAndNameMatches {
 		result.Items = append(result.Items, "User : "+string(v[2]))
@@ -22,10 +21,6 @@ func ParseCity(contents []byte) engine.ParseResult {
 			Url:        string(v[1]),
 			ParserFunc: ParseProfile,
 		})
-		limit--
-		if limit == 0 {
-			break
-		}
 	}
 
 	return result

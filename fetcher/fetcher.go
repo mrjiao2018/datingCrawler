@@ -38,17 +38,6 @@ func Fetch(url string) (bytes []byte, err error) {
 	//return ioutil.ReadAll(resp.Body)
 }
 
-//func determineEncoding(r io.Reader) encoding.Encoding {
-//	//todo 此处还是会先读取1024个字节
-//	bytes, err := bufio.NewReader(r).Peek(1024)
-//	if err != nil {
-//		log.Printf("Fetcher error: %v", err)
-//		return unicode.UTF8
-//	}
-//	e, _, _ := charset.DetermineEncoding(bytes, "")
-//	return e
-//}
-
 func determineEncoding(r *bufio.Reader) encoding.Encoding {
 	bytes, err := r.Peek(1024)
 	if err != nil {

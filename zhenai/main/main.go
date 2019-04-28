@@ -2,11 +2,26 @@ package main
 
 import (
 	"crawler/engine"
+	"crawler/scheduler"
 	"crawler/zhenai/parser"
 )
 
+// 单线程版本爬虫
+//func main() {
+//	engine.SingleThreadEngine{}.Run(engine.Request{
+//		Url:        "http://www.zhenai.com/zhenghun",
+//		ParserFunc: parser.ParseCityList,
+//	})
+//}
+
+// 多线程版本爬虫
 func main() {
-	engine.Run(engine.Request{
+	e := engine.ConcurrentEngine{
+		Scheduler:   &scheduler.SimpleScheduler{},
+		WorkerCount: 100,
+	}
+
+	e.Run(engine.Request{
 		Url:        "http://www.zhenai.com/zhenghun",
 		ParserFunc: parser.ParseCityList,
 	})
