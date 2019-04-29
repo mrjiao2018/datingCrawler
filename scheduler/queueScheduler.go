@@ -10,19 +10,22 @@ type QueueScheduler struct {
 	workerChan chan (chan engine.Request)
 }
 
+func (s *QueueScheduler) WorkerChan() chan engine.Request {
+	return make(chan engine.Request)
+}
+
 func (s *QueueScheduler) Submit(request engine.Request) {
 	s.requestChan <- request
 }
 
-func (s *QueueScheduler) WorkerReady(w chan engine.Request) {
-	s.workerChan <- w
-}
-
-func (s *QueueScheduler) ConfigureMasterWorkerChan(chan engine.Request) {
-	panic("implement me")
+func (s *QueueScheduler) WorkerReady(worker chan engine.Request) {
+	s.workerChan <- worker
 }
 
 // 队列调度的实现
+// 维护 request 队列和 worker 队列，
+// 当队列为空时，直接向队列中添加元素
+// 队列不为空时，则取出队列中的队首元素，将 request 分发给 worker
 func (s *QueueScheduler) Run() {
 	s.requestChan = make(chan engine.Request)
 	s.workerChan = make(chan chan engine.Request)
