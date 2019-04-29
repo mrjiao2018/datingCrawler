@@ -25,4 +25,5 @@ func main() {
 		Url:        "http://www.zhenai.com/zhenghun",
 		ParserFunc: parser.ParseCityList,
 	})
+
 }

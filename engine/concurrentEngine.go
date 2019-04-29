@@ -30,6 +30,11 @@ type ReadyNotifier interface {
 	WorkerReady(chan Request)
 }
 
+// 记录已经爬取过的 user 的 url 和 city 的 url，防止重复爬取，
+// 但同时要保证查询效率为 O(1)，否则后期百万数据量时，查询性能很可能成为瓶颈，
+// 解决方案：hashMap，key 为 url，value 自定义，不为空即可
+var visitedUrls = make(map[string]bool)
+
 func (e *ConcurrentEngine) Run(seeds ...Request) {
 
 	// 1. 设定所有 worker 共享的输出 channel
@@ -45,6 +50,9 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 
 	// 3. 将所有 Request 交给 Scheduler 来进行调度分发
 	for _, request := range seeds {
+		if isDuplicated(request.Url) {
+			continue
+		}
 		e.Scheduler.Submit(request)
 	}
 
@@ -59,6 +67,10 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 
 		// 5. 获得 Item 之后，要将 result 中的所有 request 再送回给 Scheduler
 		for _, request := range result.Requests {
+			if isDuplicated(request.Url) {
+				continue
+			}
+
 			e.Scheduler.Submit(request)
 		}
 	}
@@ -76,4 +88,12 @@ func createWorker(in chan Request, out chan ParseResult, ready ReadyNotifier) {
 			out <- result
 		}
 	}()
+}
+
+func isDuplicated(url string) bool {
+	if visitedUrls[url] {
+		return true
+	}
+	visitedUrls[url] = true
+	return false
 }
