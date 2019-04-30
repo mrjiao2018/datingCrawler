@@ -1,5 +1,7 @@
 package model
 
+import "encoding/json"
+
 type Profile struct {
 	Name            string //姓名（可能为用户自定义的昵称）
 	Gender          string //性别
@@ -23,4 +25,14 @@ type Profile struct {
 	House           string //购房状况
 	Cigarette       string //抽烟状况
 	Wine            string //喝酒状况
+}
+
+func FromJsonObj(o interface{}) (Profile, error) {
+	var profile Profile
+	bytes, e := json.Marshal(o)
+	if e != nil {
+		return profile, e
+	}
+	e = json.Unmarshal(bytes, &profile)
+	return profile, e
 }

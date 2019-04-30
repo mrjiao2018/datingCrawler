@@ -2,6 +2,7 @@ package main
 
 import (
 	"crawler/engine"
+	"crawler/persist"
 	"crawler/scheduler"
 	"crawler/zhenai/parser"
 )
@@ -16,9 +17,15 @@ import (
 
 // 多线程版本爬虫
 func main() {
+	itemChan, err := persist.ItemSaver("dating_profile")
+	if err != nil {
+		panic(err)
+	}
+
 	e := engine.ConcurrentEngine{
 		Scheduler:   &scheduler.QueueScheduler{},
 		WorkerCount: 100,
+		ItemChan:    itemChan,
 	}
 
 	e.Run(engine.Request{

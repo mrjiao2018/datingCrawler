@@ -7,6 +7,7 @@ import (
 type ConcurrentEngine struct {
 	Scheduler   Scheduler
 	WorkerCount int
+	ItemChan    chan Item
 }
 
 type Scheduler interface {
@@ -63,6 +64,9 @@ func (e *ConcurrentEngine) Run(seeds ...Request) {
 		for _, item := range result.Items {
 			log.Printf("Got item %d : %+v\n", itemCount, item)
 			itemCount++
+			go func() {
+				e.ItemChan <- item
+			}()
 		}
 
 		// 5. 获得 Item 之后，要将 result 中的所有 request 再送回给 Scheduler

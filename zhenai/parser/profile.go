@@ -3,11 +3,11 @@ package parser
 import (
 	"crawler/engine"
 	"crawler/model"
-	"crawler/tools"
 	"regexp"
 	"strconv"
 )
 
+var idRe = regexp.MustCompile(`http://album.zhenai.com/u/([0-9]+)`)
 var nameRe = regexp.MustCompile(`<h1 class="nickName" [^>]*>([^<]+)</h1>`)
 var genderRe = regexp.MustCompile(`(男士|女士)征婚`)
 var birthRe = regexp.MustCompile(`(白羊座|金牛座|双子座|巨蟹座|狮子座|处女座|天秤座|天蝎座|射手座|魔羯座|水瓶座|双鱼座)`)
@@ -35,45 +35,70 @@ var wineRe = regexp.MustCompile(`(不喝酒|稍微喝一点酒|酒喝得很多|�
 
 // 解析每个用户的详细信息
 // 如 http://album.zhenai.com/u/102088914 即对应着一个具体的用户信息
-func ParseProfile(contents []byte) engine.ParseResult {
+func ParseProfile(contents []byte, url string) engine.ParseResult {
 	profile := model.Profile{}
 
-	profile.Name = tools.ExtractString(contents, nameRe)
-	profile.LivingLocation = tools.ExtractString(contents, livingLocationRe)
-	profile.Birth = tools.ExtractString(contents, birthRe)
-	profile.Education = tools.ExtractString(contents, educationRe)
-	profile.Marriage = tools.ExtractString(contents, marriageRe)
-	profile.Income = tools.ExtractString(contents, incomeRe)
-	profile.WorkLocation = tools.ExtractString(contents, workLocationRe)
-	profile.Work = tools.ExtractString(contents, workRe)
-	profile.Nation = tools.ExtractString(contents, nationRe)
-	profile.NativePlace = tools.ExtractString(contents, nativePlaceRe)
-	profile.BodyShape = tools.ExtractString(contents, bodyShapeRe)
-	profile.Cigarette = tools.ExtractString(contents, cigaretteRe)
-	profile.Wine = tools.ExtractString(contents, wineRe)
-	profile.House = tools.ExtractString(contents, houseRe)
-	profile.HasChild = tools.ExtractString(contents, hasChildRe)
-	profile.WantChild = tools.ExtractString(contents, wantChildRe)
-	profile.Gender = tools.ExtractString(contents, genderRe)
-	profile.Car = tools.ExtractString(contents, carRe)
-	profile.MarriageWilling = tools.ExtractString(contents, marriageWillingRe)
-
-	age, ageErr := strconv.Atoi(tools.ExtractString(contents, ageRe))
-	if ageErr == nil {
-		profile.Age = age
-	}
-
-	height, heightErr := strconv.Atoi(tools.ExtractString(contents, heightRe))
-	if heightErr == nil {
-		profile.Height = height
-	}
-
-	weight, weightErr := strconv.Atoi(tools.ExtractString(contents, weightRe))
-	if weightErr == nil {
-		profile.Weight = weight
-	}
-
+	profile.Name = extractString(contents, nameRe)
+	profile.LivingLocation = extractString(contents, livingLocationRe)
+	profile.Birth = extractString(contents, birthRe)
+	profile.Education = extractString(contents, educationRe)
+	profile.Marriage = extractString(contents, marriageRe)
+	profile.Income = extractString(contents, incomeRe)
+	profile.WorkLocation = extractString(contents, workLocationRe)
+	profile.Work = extractString(contents, workRe)
+	profile.Nation = extractString(contents, nationRe)
+	profile.NativePlace = extractString(contents, nativePlaceRe)
+	profile.BodyShape = extractString(contents, bodyShapeRe)
+	profile.Cigarette = extractString(contents, cigaretteRe)
+	profile.Wine = extractString(contents, wineRe)
+	profile.House = extractString(contents, houseRe)
+	profile.HasChild = extractString(contents, hasChildRe)
+	profile.WantChild = extractString(contents, wantChildRe)
+	profile.Gender = extractString(contents, genderRe)
+	profile.Car = extractString(contents, carRe)
+	profile.MarriageWilling = extractString(contents, marriageWillingRe)
+	setIntValue(&profile.Age, contents, ageRe)
+	setIntValue(&profile.Height, contents, heightRe)
+	setIntValue(&profile.Weight, contents, weightRe)
+	//age, ageErr := strconv.Atoi(extractString(contents, ageRe))
+	//if ageErr == nil {
+	//	profile.Age = age
+	//}
+	//height, heightErr := strconv.Atoi(extractString(contents, heightRe))
+	//if heightErr == nil {
+	//	profile.Height = height
+	//}
+	//weight, weightErr := strconv.Atoi(extractString(contents, weightRe))
+	//if weightErr == nil {
+	//	profile.Weight = weight
+	//}
 	return engine.ParseResult{
-		Items: []interface{}{profile},
+		Items: []engine.Item{
+			{
+				Url:     url,
+				Type:    "zhenai",
+				Id:      extractString([]byte(url), idRe),
+				PayLoad: profile,
+			},
+		},
+	}
+}
+
+// 设置 profile 中的 Int 类型的属性
+func setIntValue(profileAttribute *int, contents []byte, reg *regexp.Regexp) {
+	value, err := strconv.Atoi(extractString(contents, reg))
+	if err == nil {
+		*profileAttribute = value
+	}
+}
+
+//根据正则表达式从 contents 中找到匹配的内容
+func extractString(contents []byte, re *regexp.Regexp) string {
+	match := re.FindSubmatch(contents)
+
+	if len(match) >= 2 {
+		return string(match[1])
+	} else {
+		return ""
 	}
 }
